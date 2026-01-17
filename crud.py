@@ -1,8 +1,11 @@
 from sqlalchemy.orm import Session
-from models import Employee, Attendance
-from schemas import EmployeeCreate, AttendanceCreate
+from models import Employee, Attendance, User
+from schemas import EmployeeCreate, AttendanceCreate, UserCreate
 from datetime import datetime
+from security import get_password_hash
 
+
+#### EMPLOYEES ####
 def create_employee(db: Session, employee: EmployeeCreate):
     db_employee = Employee(**employee.dict())
     db.add(db_employee)
@@ -32,6 +35,7 @@ def delete_employee(db: Session, employee_id: int):
         db.commit()
     return db_employee
 
+#### ATTENDANCES ####
 def create_attendance(db: Session, attendance: AttendanceCreate):
     db_attendance = Attendance(**attendance.dict())
     db.add(db_attendance)
@@ -54,3 +58,19 @@ def checkout_attendance(db: Session, attendance_id: int):
         db.refresh(db_attendance)
         return db_attendance, hours
     return None, None
+
+#### USERS ####
+def get_user_by_email(db: Session, email: str) -> User | None:
+    return db.query(User).filter(User.email == email).first()
+
+def create_user(db: Session, user: UserCreate) -> User:
+    hashed_password = get_password_hash(user.password)
+    db_user = User(
+        email=user.email,
+        hashed_password=hashed_password,
+        full_name=user.full_name,
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user

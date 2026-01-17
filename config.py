@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     )
 
     DATABASE_URL: str
-    # SECRET_KEY: str = "fallback-secret"
+    SECRET_KEY: str = "fallback-secret"
     DEBUG: bool = False
     APP_NAME: str = "Employee Attendance API"
 
