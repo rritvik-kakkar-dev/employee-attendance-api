@@ -13,18 +13,6 @@ app = FastAPI(title="Employee & Attendance API")
 
 app.include_router(auth.router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",     # Vite default dev port
-        "http://localhost:3000",     # if using create-react-app
-        "http://127.0.0.1:5173",
-        # Add your production frontend domain later, e.g. "https://your-app.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Employee routes
 @app.post("/employees/", response_model=schemas.Employee)

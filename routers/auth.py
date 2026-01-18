@@ -8,6 +8,7 @@ from schemas import UserCreate, UserOut, Token
 from crud import get_user_by_email, create_user
 from security import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
+from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/auth",
@@ -34,29 +35,45 @@ def register(
     return new_user
 
 
+# @router.post("/login", response_model=Token)
+# def login(
+#     form_data: OAuth2PasswordRequestForm = Depends(),
+#     db: Session = Depends(get_db)
+# ):
+#     """
+#     Login with email and password → returns JWT
+#     Note: form_data.username is used for email
+#     """
+#     user = get_user_by_email(db, email=form_data.username)
+#     if not user or not verify_password(form_data.password, user.hashed_password):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Incorrect email or password",
+#             headers={"WWW-Authenticate": "Bearer"},
+#         )
+
+#     access_token = create_access_token(
+#         data={"sub": user.email},
+#         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#     )
+
+#     return {
+#         "access_token": access_token,
+#         "token_type": "bearer"
+#     }
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 @router.post("/login", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    request: LoginRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Login with email and password → returns JWT
-    Note: form_data.username is used for email
-    """
-    user = get_user_by_email(db, email=form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    access_token = create_access_token(
-        data={"sub": user.email},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    user = get_user_by_email(db, email=request.email)
+    if not user or not verify_password(request.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
+    
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
